@@ -22,8 +22,8 @@ def convert_unordered_list(lines, index):
     Convert Markdown unordered list to HTML list
     """
     html_lines = []
-    while index < len(lines) and re.match(r'^- (.+)', lines[index]):
-        match = re.match(r'^- (.+)', lines[index])
+    while index < len(lines) and re.match(r'^\* (.+)', lines[index]):
+        match = re.match(r'^\* (.+)', lines[index])
         if match:
             item_text = match.group(1)
             html_lines.append("<li>{}</li>".format(item_text))
@@ -38,8 +38,8 @@ def convert_ordered_list(lines, index):
     Convert Markdown ordered list to HTML list
     """
     html_lines = []
-    while index < len(lines) and re.match(r'^\* (.+)', lines[index]):
-        match = re.match(r'^\* (.+)', lines[index])
+    while index < len(lines) and re.match(r'^- (.+)', lines[index]):
+        match = re.match(r'^- (.+)', lines[index])
         if match:
             item_text = match.group(1)
             html_lines.append("<li>{}</li>".format(item_text))
@@ -59,7 +59,11 @@ def convert_paragraph(lines, index):
         index += 1
 
     if html_lines:
+        # Join lines into a single paragraph
         html_paragraph = "<p>\n{}\n</p>\n".format("<br/>\n".join(html_lines))
+        # Convert __text__ to <b>text</b> and **text** to <em>text</em>
+        html_paragraph = re.sub(r'__(.+?)__', r'<b>\1</b>', html_paragraph)
+        html_paragraph = re.sub(r'\*\*(.+?)\*\*', r'<em>\1</em>', html_paragraph)
         return html_paragraph, index
     return None, index
 
@@ -102,7 +106,7 @@ def markdown_to_html():
                             if html_line:
                                 html_file.write(html_line)
                             else:
-                                # If it's none of the above, write the original line to HTML
+                                # If none of the conversions match, write the original line
                                 html_file.write(line + '\n')
                 index += 1
 
