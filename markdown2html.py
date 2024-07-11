@@ -5,6 +5,7 @@ From markdown to html
 import sys
 import os
 import re
+import hashlib
 
 
 def convert_heading(line):
@@ -17,8 +18,7 @@ def convert_heading(line):
         heading_text = match.group(2)
         return "<h{}>{}</h{}>\n".format(heading_level,
                                         heading_text,
-                                        heading_level
-                                        )
+                                        heading_level)
     return None
 
 
@@ -27,10 +27,11 @@ def convert_unordered_list(lines, index):
     Convert Markdown unordered list to HTML list
     """
     html_lines = []
-    while index < len(lines) and re.match(r'^\* (.+)', lines[index]):
-        match = re.match(r'^\* (.+)', lines[index])
+    while index < len(lines) and re.match(r'^- (.+)', lines[index]):
+        match = re.match(r'^- (.+)', lines[index])
         if match:
             item_text = match.group(1)
+            item_text = apply_transformations(item_text)
             html_lines.append("<li>{}</li>".format(item_text))
         index += 1
 
@@ -44,10 +45,11 @@ def convert_ordered_list(lines, index):
     Convert Markdown ordered list to HTML list
     """
     html_lines = []
-    while index < len(lines) and re.match(r'^- (.+)', lines[index]):
-        match = re.match(r'^- (.+)', lines[index])
+    while index < len(lines) and re.match(r'^\* (.+)', lines[index]):
+        match = re.match(r'^\* (.+)', lines[index])
         if match:
             item_text = match.group(1)
+            item_text = apply_transformations(item_text)
             html_lines.append("<li>{}</li>".format(item_text))
         index += 1
 
@@ -56,23 +58,39 @@ def convert_ordered_list(lines, index):
     return None, index
 
 
-def convert_paragraph(lines, index):
+def convert_paragraph(line):
     """
-    Convert consecutive lines of text into a single HTML paragraph
+    Convert a Markdown paragraph to HTML paragraph
     """
-    html_lines = []
-    while index < len(lines) and lines[index].strip():
-        html_lines.append(lines[index].strip())
-        index += 1
+    if line.strip():  
+        html_line = "<p>\n{}\n</p>\n".format(line.strip())
+        return html_line
+    return ""
 
-    if html_lines:
-        # Join lines into a single paragraph
-        html_paragraph = "<p>\n{}\n</p>\n".format("<br/>\n".join(html_lines))
-        # Convert **text** to <b>text</b> and __text__ to <em>text</em>
-        html_paragraph = re.sub(r'\*\*(.+?)\*\*', r'<b>\1</b>', html_paragraph)
-        html_paragraph = re.sub(r'__(.+?)__', r'<em>\1</em>', html_paragraph)
-        return html_paragraph, index
-    return None, index
+
+def apply_transformations(line):
+    """
+    Apply transformations for [[text]] to MD5 and ((text)) to remove 'c'
+    """
+    # Check for [[text]] and apply MD5 transformation
+    line = re.sub(
+        r'\[\[(.*?)\]\]',
+        lambda match: hashlib.md5(match.group(1).encode('utf-8')).hexdigest(),
+        line)
+
+    # Check for ((text)) and remove 'c' (case insensitive)
+    line = re.sub(
+        r'\(\((.*?)\)\)',
+        lambda match: match.group(1).replace('c', '').replace('C', ''),
+        line)
+
+    # Check for **text** and convert to <b>text</b>
+    line = re.sub(r'\*\*(.*?)\*\*', r'<b>\1</b>', line)
+
+    # Check for __text__ and convert to <i>text</i>
+    line = re.sub(r'__(.*?)__', r'<em>\1</em>', line)
+
+    return line
 
 
 def markdown_to_html():
@@ -110,13 +128,11 @@ def markdown_to_html():
                         if html_line:
                             html_file.write(html_line)
                         else:
-                            html_line, index = convert_paragraph(lines, index)
-                            if html_line:
-                                html_file.write(html_line)
-                            else:
-                                # If none of the conversions match,
-                                # write the original line
-                                html_file.write(line + '\n')
+                            # If it's neither heading nor list,
+                            # check for transformations
+                            html_line = convert_paragraph(line)
+                            html_line = apply_transformations(html_line)
+                            html_file.write(html_line)
                 index += 1
 
     except Exception as e:
