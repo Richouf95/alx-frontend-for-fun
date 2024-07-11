@@ -61,9 +61,9 @@ def convert_paragraph(lines, index):
     if html_lines:
         # Join lines into a single paragraph
         html_paragraph = "<p>\n{}\n</p>\n".format("<br/>\n".join(html_lines))
-        # Convert __text__ to <b>text</b> and **text** to <em>text</em>
-        html_paragraph = re.sub(r'__(.+?)__', r'<b>\1</b>', html_paragraph)
-        html_paragraph = re.sub(r'\*\*(.+?)\*\*', r'<em>\1</em>', html_paragraph)
+        # Convert **text** to <b>text</b> and __text__ to <em>text</em>
+        html_paragraph = re.sub(r'\*\*(.+?)\*\*', r'<b>\1</b>', html_paragraph)
+        html_paragraph = re.sub(r'__(.+?)__', r'<em>\1</em>', html_paragraph)
         return html_paragraph, index
     return None, index
 
