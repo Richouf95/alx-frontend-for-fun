@@ -15,9 +15,8 @@ def convert_heading(line):
     if match:
         heading_level = len(match.group(1))
         heading_text = match.group(2)
-        return f"<h{heading_level}>{heading_text}</h{heading_level}>\n"
+        return "<h{}>{}</h{}>\n".format(heading_level, heading_text, heading_level)
     return None
-
 
 def convert_unordered_list(lines, index):
     """
@@ -28,13 +27,28 @@ def convert_unordered_list(lines, index):
         match = re.match(r'^- (.+)', lines[index])
         if match:
             item_text = match.group(1)
-            html_lines.append(f"<li>{item_text}</li>")
+            html_lines.append("<li>{}</li>".format(item_text))
         index += 1
 
     if html_lines:
         return "<ul>\n" + "\n".join(html_lines) + "\n</ul>\n", index
     return None, index
 
+def convert_ordered_list(lines, index):
+    """
+    Convert Markdown ordered list to HTML list
+    """
+    html_lines = []
+    while index < len(lines) and re.match(r'^\* (.+)', lines[index]):
+        match = re.match(r'^\* (.+)', lines[index])
+        if match:
+            item_text = match.group(1)
+            html_lines.append("<li>{}</li>".format(item_text))
+        index += 1
+
+    if html_lines:
+        return "<ol>\n" + "\n".join(html_lines) + "\n</ol>\n", index
+    return None, index
 
 def markdown_to_html():
     """
@@ -52,8 +66,8 @@ def markdown_to_html():
         sys.exit(1)
 
     try:
-        with open(markdown_file_name, 'r') as md_file:
-            lines = md_file.readlines()
+        with open(markdown_file_name, 'r') as markdown_file:
+            lines = markdown_file.readlines()
 
         with open(html_file_name, 'w') as html_file:
             index = 0
@@ -67,9 +81,12 @@ def markdown_to_html():
                     if html_line:
                         html_file.write(html_line)
                     else:
-                        # If it's neither heading nor unordered list,
-                        # write the original line to HTML
-                        html_file.write(line + '\n')
+                        html_line, index = convert_ordered_list(lines, index)
+                        if html_line:
+                            html_file.write(html_line)
+                        else:
+                            # If it's neither heading nor list, write the original line to HTML
+                            html_file.write(line + '\n')
                 index += 1
 
     except Exception as e:
