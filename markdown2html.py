@@ -6,6 +6,7 @@ import sys
 import os
 import re
 
+
 def convert_heading(line):
     """
     Convert a Markdown heading to HTML heading
@@ -14,8 +15,12 @@ def convert_heading(line):
     if match:
         heading_level = len(match.group(1))
         heading_text = match.group(2)
-        return "<h{}>{}</h{}>\n".format(heading_level, heading_text, heading_level)
+        return "<h{}>{}</h{}>\n".format(heading_level,
+                                        heading_text,
+                                        heading_level
+                                        )
     return None
+
 
 def convert_unordered_list(lines, index):
     """
@@ -33,6 +38,7 @@ def convert_unordered_list(lines, index):
         return "<ul>\n" + "\n".join(html_lines) + "\n</ul>\n", index
     return None, index
 
+
 def convert_ordered_list(lines, index):
     """
     Convert Markdown ordered list to HTML list
@@ -48,6 +54,7 @@ def convert_ordered_list(lines, index):
     if html_lines:
         return "<ol>\n" + "\n".join(html_lines) + "\n</ol>\n", index
     return None, index
+
 
 def convert_paragraph(lines, index):
     """
@@ -66,6 +73,7 @@ def convert_paragraph(lines, index):
         html_paragraph = re.sub(r'__(.+?)__', r'<em>\1</em>', html_paragraph)
         return html_paragraph, index
     return None, index
+
 
 def markdown_to_html():
     """
@@ -106,13 +114,15 @@ def markdown_to_html():
                             if html_line:
                                 html_file.write(html_line)
                             else:
-                                # If none of the conversions match, write the original line
+                                # If none of the conversions match,
+                                # write the original line
                                 html_file.write(line + '\n')
                 index += 1
 
     except Exception as e:
         sys.stderr.write("Error: {}\n".format(e))
         sys.exit(1)
+
 
 if __name__ == "__main__":
     markdown_to_html()
