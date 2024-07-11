@@ -6,7 +6,6 @@ import sys
 import os
 import re
 
-
 def convert_heading(line):
     """
     Convert a Markdown heading to HTML heading
@@ -50,6 +49,20 @@ def convert_ordered_list(lines, index):
         return "<ol>\n" + "\n".join(html_lines) + "\n</ol>\n", index
     return None, index
 
+def convert_paragraph(lines, index):
+    """
+    Convert consecutive lines of text into a single HTML paragraph
+    """
+    html_lines = []
+    while index < len(lines) and lines[index].strip():
+        html_lines.append(lines[index].strip())
+        index += 1
+
+    if html_lines:
+        html_paragraph = "<p>\n{}\n</p>\n".format("<br/>\n".join(html_lines))
+        return html_paragraph, index
+    return None, index
+
 def markdown_to_html():
     """
     Transform markdown file to html
@@ -85,14 +98,17 @@ def markdown_to_html():
                         if html_line:
                             html_file.write(html_line)
                         else:
-                            # If it's neither heading nor list, write the original line to HTML
-                            html_file.write(line + '\n')
+                            html_line, index = convert_paragraph(lines, index)
+                            if html_line:
+                                html_file.write(html_line)
+                            else:
+                                # If it's none of the above, write the original line to HTML
+                                html_file.write(line + '\n')
                 index += 1
 
     except Exception as e:
         sys.stderr.write("Error: {}\n".format(e))
         sys.exit(1)
-
 
 if __name__ == "__main__":
     markdown_to_html()
