@@ -2,6 +2,6 @@
 
 @for $item from 1 through 4 {
     .col-#{$item} {
-        width: calc(100% / $item);
+        width: 100% / $item;
     }
 }
