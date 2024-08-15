@@ -1,0 +1,7 @@
+/* Loop Headers */
+
+@for $index from 1 through 5 {
+    h#{$index} {
+        font-size: $index + px;
+    }
+}
